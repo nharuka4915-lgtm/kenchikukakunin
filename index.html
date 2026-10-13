@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>用途変更の類似用途 グループ分けアプリ</title>
+    <style>
+        body { font-family: sans-serif; max-width: 900px; margin: 20px auto; padding: 15px; background: #f9f9f9; color: #333; }
+        h1 { font-size: 20px; text-align: center; margin-bottom: 5px; }
+        p.subtitle { text-align: center; font-size: 13px; color: #666; margin-top: 0; }
+        
+        .container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .pool-area { flex: 1; min-width: 280px; background: #fff; border: 2px dashed #ccc; border-radius: 8px; padding: 15px; max-height: 70vh; overflow-y: auto; }
+        .target-area { flex: 2; min-width: 320px; display: flex; flex-direction: column; gap: 10px; max-height: 70vh; overflow-y: auto; }
+
+        .card { background: #e3f2fd; border: 1px solid #90caf9; padding: 8px 12px; margin-bottom: 8px; border-radius: 6px; cursor: grab; font-size: 13px; user-select: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card:active { cursor: grabbing; }
+
+        .group-box { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; min-height: 40px; }
+        .group-title { font-weight: bold; font-size: 13px; color: #1976d2; margin-bottom: 4px; }
+        .group-dropzone { min-height: 25px; border: 1px dashed #b0bec5; border-radius: 4px; padding: 4px; display: flex; flex-wrap: wrap; gap: 5px; background: #fafafa; }
+        .group-dropzone .card { margin-bottom: 0; background: #fff; }
+
+        .controls { text-align: center; margin-top: 20px; }
+        button { background: #1976d2; color: #fff; border: none; padding: 10px 20px; font-size: 15px; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #115293; }
+
+        .correct { background: #c8e6c9 !important; border-color: #81c784 !important; }
+        .incorrect { background: #ffcdd2 !important; border-color: #e57373 !important; }
+        
+        #result-summary { text-align: center; font-size: 16px; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>用途変更の類似用途 グループ分け</h1>
+    <p class="subtitle">左側のカードをドラッグ＆ドロップして、正しいグループ（①〜⑪）の枠に当てはめよう！</p>
+
+    <div class="container">
+        <!-- 用語プール -->
+        <div class="pool-area">
+            <h3>用語カード（未分類）</h3>
+            <div id="pool" class="group-dropzone" ondragover="allowDrop(event)" ondrop="dropToPool(event)" style="min-height: 300px;">
+                <!-- JSでカードがここに入ります -->
+            </div>
+        </div>
+
+        <!-- グループ枠 -->
+        <div class="target-area" id="groups-container">
+            <!-- JSで①〜⑪の枠が生成されます -->
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="checkAnswers()">正誤判定をする</button>
+        <button onclick="resetApp()" style="background: #757575; margin-left: 10px;">リセット</button>
+        <div id="result-summary"></div>
+    </div>
+
+    <script>
+        const originalData = [
+            { id: "c1", group: "①", name: "劇場、映画館、演芸場" },
+            { id: "c2", group: "②", name: "公会堂、集会場" },
+            { id: "c3", group: "③", name: "診療所（患者の収容施設があるものに限る。）、児童福祉施設等" },
+            { id: "c4", group: "④", name: "ホテル、旅館" },
+            { id: "c5", group: "⑤", name: "下宿、寄宿舎" },
+            { id: "c6", group: "⑥", name: "博物館、美術館、図書館" },
+            { id: "c7", group: "⑦", name: "体育館、ボーリング場、スケート場、水泳場、スキー場、ゴルフ練習場、バッティング練習場" },
+            { id: "c8", group: "⑧", name: "百貨店、マーケット、その他の物品販売業を営む店舗" },
+            { id: "c9", group: "⑨", name: "キャバレー、カフェー、ナイトクラブ、バー" },
+            { id: "c10", group: "⑩", name: "待合、料理店" },
+            { id: "c11", group: "⑪", name: "映画スタジオ、テレビスタジオ" }
+        ];
+
+        function initApp() {
+            const pool = document.getElementById('pool');
+            const groupsContainer = document.getElementById('groups-container');
+            pool.innerHTML = '';
+            groupsContainer.innerHTML = '';
+            document.getElementById('result-summary').textContent = '';
+
+            // グループ枠の生成
+            originalData.forEach(item => {
+                let gBox = document.createElement('div');
+                gBox.className = 'group-box';
+                gBox.innerHTML = `
+                    <div class="group-title">グループ ${item.group}</div>
+                    <div class="group-dropzone" data-group="${item.group}" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)"></div>
+                `;
+                groupsContainer.appendChild(gBox);
+            });
+
+            // カードをシャッフルしてプールに配置
+            let shuffledCards = [...originalData].sort(() => Math.random() - 0.5);
+            shuffledCards.forEach(item => {
+                let card = document.createElement('div');
+                card.className = 'card';
+                card.draggable = true;
+                card.id = item.id;
+                card.textContent = item.name;
+                card.dataset.group = item.group;
+                card.addEventListener('dragstart', dragStart);
+                pool.appendChild(card);
+            });
+        }
+
+        function dragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.id);
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            let id = e.dataTransfer.getData('text/plain');
+            let card = document.getElementById(id);
+            
+            // ドロップ先が dropzone か判定
+            let dropzone = e.target.closest('.group-dropzone');
+            if (dropzone) {
+                dropzone.appendChild(card);
+                card.classList.remove('correct', 'incorrect');
+            }
+        }
+
+        function dropToPool(e) {
+            e.preventDefault();
+            let id = e.dataTransfer.getData('text/plain');
+            let card = document.getElementById(id);
+            let pool = document.getElementById('pool');
+            pool.appendChild(card);
+            card.classList.remove('correct', 'incorrect');
+        }
+
+        function checkAnswers() {
+            let dropzones = document.querySelectorAll('.target-area .group-dropzone');
+            let correctCount = 0;
+            let totalCards = originalData.length;
+
+            dropzones.forEach(zone => {
+                let targetGroup = zone.dataset.group;
+                let cards = zone.querySelectorAll('.card');
+                
+                cards.forEach(card => {
+                    if (card.dataset.group === targetGroup) {
+                        card.classList.add('correct');
+                        card.classList.remove('incorrect');
+                        correctCount++;
+                    } else {
+                        card.classList.add('incorrect');
+                        card.classList.remove('correct');
+                    }
+                });
+            });
+
+            let summary = document.getElementById('result-summary');
+            if (correctCount === totalCards) {
+                summary.style.color = 'green';
+                summary.textContent = `全問正解です！おめでとうございます！ (${correctCount}/${totalCards})`;
+            } else {
+                summary.style.color = '#d32f2f';
+                summary.textContent = `正解数: ${correctCount} / ${totalCards} （赤色のカードは場所が違います）`;
+            }
+        }
+
+        function resetApp() {
+            initApp();
+        }
+
+        // 初期化実行
+        initApp();
+    </script>
+</body>
+</html>
