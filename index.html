@@ -5,33 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>用途変更の類似用途 グループ分けアプリ</title>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 10px auto; padding: 10px; background: #f9f9f9; color: #333; }
-        h1 { font-size: 18px; text-align: center; margin-bottom: 5px; }
-        p.subtitle { text-align: center; font-size: 12px; color: #666; margin-top: 0; }
+        body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 10px; background: #f9f9f9; color: #333; height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
         
-        .container { display: flex; flex-direction: column; gap: 15px; }
-        .pool-area { background: #fff; border: 2px solid #ccc; border-radius: 8px; padding: 12px; }
-        .target-area { display: flex; flex-direction: column; gap: 8px; }
+        h1 { font-size: 17px; text-align: center; margin: 5px 0 2px 0; }
+        p.subtitle { text-align: center; font-size: 11px; color: #666; margin: 0 0 5px 0; }
+        
+        .instruction-banner { background: #fffde7; border: 1px solid #fff59d; padding: 6px; border-radius: 4px; font-size: 12px; text-align: center; margin-bottom: 5px; color: #f57f17; font-weight: bold; flex-shrink: 0; }
 
-        .card { background: #e3f2fd; border: 1px solid #90caf9; padding: 8px 10px; margin-bottom: 6px; border-radius: 6px; font-size: 13px; cursor: pointer; user-select: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: inline-block; }
+        /* 上部：未分類カードエリア（固定） */
+        .pool-area { background: #fff; border: 2px solid #ccc; border-radius: 8px; padding: 8px 10px; flex-shrink: 0; max-height: 38vh; overflow-y: auto; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .pool-area h3 { margin: 0 0 5px 0; font-size: 12px; color: #555; }
+
+        /* 下部：箱とコントロールエリア（ここだけスクロールする） */
+        .scrollable-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
+
+        .card { background: #e3f2fd; border: 1px solid #90caf9; padding: 6px 9px; margin-bottom: 5px; border-radius: 6px; font-size: 12px; cursor: pointer; user-select: none; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: inline-block; }
         .card.selected { background: #bbdefb; border-color: #1976d2; box-shadow: 0 0 5px rgba(25,118,210,0.5); font-weight: bold; }
 
-        .group-box { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 10px; cursor: pointer; }
+        .group-box { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
         .group-box:active { background: #f1f1f1; }
-        .group-title { font-weight: bold; font-size: 13px; color: #1976d2; margin-bottom: 6px; }
-        .group-content { min-height: 35px; display: flex; flex-wrap: wrap; gap: 5px; background: #fafafa; border: 1px dashed #b0bec5; border-radius: 4px; padding: 6px; }
+        .group-title { font-weight: bold; font-size: 12px; color: #1976d2; margin-bottom: 4px; }
+        .group-content { min-height: 28px; display: flex; flex-wrap: wrap; gap: 4px; background: #fafafa; border: 1px dashed #b0bec5; border-radius: 4px; padding: 4px; }
         .group-content .card { margin-bottom: 0; background: #fff; }
 
-        .controls { text-align: center; margin-top: 20px; margin-bottom: 30px; }
-        button { background: #1976d2; color: #fff; border: none; padding: 12px 24px; font-size: 15px; border-radius: 6px; cursor: pointer; }
+        .controls { text-align: center; margin-top: 10px; padding-bottom: 10px; }
+        button { background: #1976d2; color: #fff; border: none; padding: 10px 20px; font-size: 14px; border-radius: 6px; cursor: pointer; }
         button:active { background: #115293; }
 
         .correct { background: #c8e6c9 !important; border-color: #81c784 !important; }
         .incorrect { background: #ffcdd2 !important; border-color: #e57373 !important; }
         
-        #result-summary { text-align: center; font-size: 15px; font-weight: bold; margin-top: 10px; }
-        .instruction-banner { background: #fffde7; border: 1px solid #fff59d; padding: 8px; border-radius: 4px; font-size: 12px; text-align: center; margin-bottom: 10px; color: #f57f17; font-weight: bold; }
-        .add-box-btn { background: #4caf50; font-size: 13px; padding: 8px 15px; margin-top: 10px; display: block; width: 100%; }
+        #result-summary { text-align: center; font-size: 14px; font-weight: bold; margin-top: 8px; }
+        .add-box-btn { background: #4caf50; font-size: 12px; padding: 8px 12px; margin-top: 5px; width: 100%; }
     </style>
 </head>
 <body>
@@ -41,26 +46,25 @@
 
     <div id="banner" class="instruction-banner">① 動かしたいカードをタップして選んでね</div>
 
-    <div class="container">
-        <!-- 用語プール -->
-        <div class="pool-area">
-            <h3 style="margin-top:0; font-size:13px; color:#555;">未分類のカード（タップして選択）</h3>
-            <div id="pool" class="group-content" style="border: none; background: transparent; padding: 0;"></div>
-        </div>
-
-        <!-- グループ枠 -->
-        <div class="target-area" id="groups-container"></div>
-        <button class="add-box-btn" onclick="addGroupBox()">＋ 箱（グループ枠）を追加する</button>
+    <!-- 上部：未分類カード（ここが固定されて常に見える） -->
+    <div class="pool-area">
+        <h3>未分類のカード（タップして選択）</h3>
+        <div id="pool" class="group-content" style="border: none; background: transparent; padding: 0;"></div>
     </div>
 
-    <div class="controls">
-        <button onclick="checkAnswers()">正誤判定をする</button>
-        <button onclick="resetApp()" style="background: #757575; margin-left: 10px;">リセット</button>
-        <div id="result-summary"></div>
+    <!-- 下部：箱と判定ボタン（ここだけスクロールする） -->
+    <div class="scrollable-content">
+        <div class="target-area" id="groups-container"></div>
+        <button class="add-box-btn" onclick="addGroupBox()">＋ 箱（グループ枠）を追加する</button>
+
+        <div class="controls">
+            <button onclick="checkAnswers()">正誤判定をする</button>
+            <button onclick="resetApp()" style="background: #757575; margin-left: 8px;">リセット</button>
+            <div id="result-summary"></div>
+        </div>
     </div>
 
     <script>
-        // 元データ（どのグループ(groupId)に属するかを内部で管理）
         const rawData = [
             { id: "c1-1", groupId: "g1", name: "劇場" },
             { id: "c1-2", groupId: "g1", name: "映画館" },
@@ -119,12 +123,10 @@
             groupsContainer.innerHTML = '';
             document.getElementById('result-summary').textContent = '';
 
-            // 最初から箱をいくつか用意しておく（例として4つ）
             for (let i = 0; i < 4; i++) {
                 addGroupBox();
             }
 
-            // カードをシャッフルしてプールに配置
             let shuffledCards = [...rawData].sort(() => Math.random() - 0.5);
             shuffledCards.forEach(item => {
                 let card = document.createElement('div');
@@ -190,7 +192,6 @@
             let placedCards = 0;
             let allCorrect = true;
 
-            // いいったんすべてのカードの判定スタイルをリセット
             document.querySelectorAll('.card').forEach(c => c.classList.remove('correct', 'incorrect'));
 
             boxes.forEach(box => {
@@ -198,19 +199,15 @@
                 if (cards.length === 0) return;
 
                 placedCards += cards.length;
-                
-                // この箱に入っている最初のカードの本来のグループIDを基準にする
                 let firstGroupId = cards[0].dataset.groupid;
                 let isBoxValid = true;
 
                 cards.forEach(card => {
-                    // 同じ箱のなかに、違うグループのカードが混ざっていたらダメ
                     if (card.dataset.groupid !== firstGroupId) {
                         isBoxValid = false;
                     }
                 });
 
-                // 箱の中身をチェック
                 cards.forEach(card => {
                     if (isBoxValid) {
                         card.classList.add('correct');
