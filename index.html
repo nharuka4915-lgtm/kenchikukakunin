@@ -2,52 +2,55 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>用途変更の類似用途 グループ分けアプリ</title>
     <style>
-        body { font-family: sans-serif; max-width: 900px; margin: 20px auto; padding: 15px; background: #f9f9f9; color: #333; }
-        h1 { font-size: 20px; text-align: center; margin-bottom: 5px; }
-        p.subtitle { text-align: center; font-size: 13px; color: #666; margin-top: 0; }
+        body { font-family: sans-serif; max-width: 600px; margin: 10px auto; padding: 10px; background: #f9f9f9; color: #333; }
+        h1 { font-size: 18px; text-align: center; margin-bottom: 5px; }
+        p.subtitle { text-align: center; font-size: 12px; color: #666; margin-top: 0; }
         
-        .container { display: flex; gap: 20px; flex-wrap: wrap; }
-        .pool-area { flex: 1; min-width: 280px; background: #fff; border: 2px dashed #ccc; border-radius: 8px; padding: 15px; max-height: 70vh; overflow-y: auto; }
-        .target-area { flex: 2; min-width: 320px; display: flex; flex-direction: column; gap: 10px; max-height: 70vh; overflow-y: auto; }
+        .container { display: flex; flex-direction: column; gap: 15px; }
+        .pool-area { background: #fff; border: 2px solid #ccc; border-radius: 8px; padding: 12px; }
+        .target-area { display: flex; flex-direction: column; gap: 8px; }
 
-        .card { background: #e3f2fd; border: 1px solid #90caf9; padding: 8px 12px; margin-bottom: 8px; border-radius: 6px; cursor: grab; font-size: 13px; user-select: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .card:active { cursor: grabbing; }
+        .card { background: #e3f2fd; border: 1px solid #90caf9; padding: 8px 10px; margin-bottom: 6px; border-radius: 6px; font-size: 13px; cursor: pointer; user-select: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: inline-block; }
+        .card.selected { background: #bbdefb; border-color: #1976d2; box-shadow: 0 0 5px rgba(25,118,210,0.5); font-weight: bold; }
 
-        .group-box { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; min-height: 40px; }
-        .group-title { font-weight: bold; font-size: 13px; color: #1976d2; margin-bottom: 4px; }
-        .group-dropzone { min-height: 25px; border: 1px dashed #b0bec5; border-radius: 4px; padding: 4px; display: flex; flex-wrap: wrap; gap: 5px; background: #fafafa; }
-        .group-dropzone .card { margin-bottom: 0; background: #fff; }
+        .group-box { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 10px; cursor: pointer; }
+        .group-box:active { background: #f1f1f1; }
+        .group-title { font-weight: bold; font-size: 13px; color: #1976d2; margin-bottom: 6px; }
+        .group-content { min-height: 35px; display: flex; flex-wrap: wrap; gap: 5px; background: #fafafa; border: 1px dashed #b0bec5; border-radius: 4px; padding: 6px; }
+        .group-content .card { margin-bottom: 0; background: #fff; }
 
-        .controls { text-align: center; margin-top: 20px; }
-        button { background: #1976d2; color: #fff; border: none; padding: 10px 20px; font-size: 15px; border-radius: 6px; cursor: pointer; }
-        button:hover { background: #115293; }
+        .controls { text-align: center; margin-top: 20px; margin-bottom: 30px; }
+        button { background: #1976d2; color: #fff; border: none; padding: 12px 24px; font-size: 15px; border-radius: 6px; cursor: pointer; }
+        button:active { background: #115293; }
 
         .correct { background: #c8e6c9 !important; border-color: #81c784 !important; }
         .incorrect { background: #ffcdd2 !important; border-color: #e57373 !important; }
         
-        #result-summary { text-align: center; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        #result-summary { text-align: center; font-size: 15px; font-weight: bold; margin-top: 10px; }
+        .instruction-banner { background: #fffde7; border: 1px solid #fff59d; padding: 8px; border-radius: 4px; font-size: 12px; text-align: center; margin-bottom: 10px; color: #f57f17; font-weight: bold; }
+        .add-box-btn { background: #4caf50; font-size: 13px; padding: 8px 15px; margin-top: 10px; display: block; width: 100%; }
     </style>
 </head>
 <body>
 
-    <h1>用途変更の類似用途 グループ分け</h1>
-    <p class="subtitle">左側のカードをドラッグ＆ドロップして、正しいグループ（①〜⑪）の枠に当てはめよう！</p>
+    <h1>類似用途 グループ分け</h1>
+    <p class="subtitle">同じ仲間の言葉を、同じ箱にまとめよう！（番号は関係なし）</p>
+
+    <div id="banner" class="instruction-banner">① 動かしたいカードをタップして選んでね</div>
 
     <div class="container">
         <!-- 用語プール -->
         <div class="pool-area">
-            <h3>用語カード（未分類）</h3>
-            <div id="pool" class="group-dropzone" ondragover="allowDrop(event)" ondrop="dropToPool(event)" style="min-height: 300px;">
-                <!-- JSでカードがここに入ります -->
-            </div>
+            <h3 style="margin-top:0; font-size:13px; color:#555;">未分類のカード（タップして選択）</h3>
+            <div id="pool" class="group-content" style="border: none; background: transparent; padding: 0;"></div>
         </div>
 
         <!-- グループ枠 -->
-        <div class="target-area" id="groups-container">
-            <!-- JSで①〜⑪の枠が生成されます -->
-        </div>
+        <div class="target-area" id="groups-container"></div>
+        <button class="add-box-btn" onclick="addGroupBox()">＋ 箱（グループ枠）を追加する</button>
     </div>
 
     <div class="controls">
@@ -57,110 +60,180 @@
     </div>
 
     <script>
-        const originalData = [
-            { id: "c1", group: "①", name: "劇場、映画館、演芸場" },
-            { id: "c2", group: "②", name: "公会堂、集会場" },
-            { id: "c3", group: "③", name: "診療所（患者の収容施設があるものに限る。）、児童福祉施設等" },
-            { id: "c4", group: "④", name: "ホテル、旅館" },
-            { id: "c5", group: "⑤", name: "下宿、寄宿舎" },
-            { id: "c6", group: "⑥", name: "博物館、美術館、図書館" },
-            { id: "c7", group: "⑦", name: "体育館、ボーリング場、スケート場、水泳場、スキー場、ゴルフ練習場、バッティング練習場" },
-            { id: "c8", group: "⑧", name: "百貨店、マーケット、その他の物品販売業を営む店舗" },
-            { id: "c9", group: "⑨", name: "キャバレー、カフェー、ナイトクラブ、バー" },
-            { id: "c10", group: "⑩", name: "待合、料理店" },
-            { id: "c11", group: "⑪", name: "映画スタジオ、テレビスタジオ" }
+        // 元データ（どのグループ(groupId)に属するかを内部で管理）
+        const rawData = [
+            { id: "c1-1", groupId: "g1", name: "劇場" },
+            { id: "c1-2", groupId: "g1", name: "映画館" },
+            { id: "c1-3", groupId: "g1", name: "演芸場" },
+            
+            { id: "c2-1", groupId: "g2", name: "公会堂" },
+            { id: "c2-2", groupId: "g2", name: "集会場" },
+            
+            { id: "c3-1", groupId: "g3", name: "診療所（患者の収容施設があるものに限る。）" },
+            { id: "c3-2", groupId: "g3", name: "児童福祉施設等" },
+            
+            { id: "c4-1", groupId: "g4", name: "ホテル" },
+            { id: "c4-2", groupId: "g4", name: "旅館" },
+            
+            { id: "c5-1", groupId: "g5", name: "下宿" },
+            { id: "c5-2", groupId: "g5", name: "寄宿舎" },
+            
+            { id: "c6-1", groupId: "g6", name: "博物館" },
+            { id: "c6-2", groupId: "g6", name: "美術館" },
+            { id: "c6-3", groupId: "g6", name: "図書館" },
+            
+            { id: "c7-1", groupId: "g7", name: "体育館" },
+            { id: "c7-2", groupId: "g7", name: "ボーリング場" },
+            { id: "c7-3", groupId: "g7", name: "スケート場" },
+            { id: "c7-4", groupId: "g7", name: "水泳場" },
+            { id: "c7-5", groupId: "g7", name: "スキー場" },
+            { id: "c7-6", groupId: "g7", name: "ゴルフ練習場" },
+            { id: "c7-7", groupId: "g7", name: "バッティング練習場" },
+            
+            { id: "c8-1", groupId: "g8", name: "百貨店" },
+            { id: "c8-2", groupId: "g8", name: "マーケット" },
+            { id: "c8-3", groupId: "g8", name: "その他の物品販売業を営む店舗" },
+            
+            { id: "c9-1", groupId: "g9", name: "キャバレー" },
+            { id: "c9-2", groupId: "g9", name: "カフェー" },
+            { id: "c9-3", groupId: "g9", name: "ナイトクラブ" },
+            { id: "c9-4", groupId: "g9", name: "バー" },
+            
+            { id: "c10-1", groupId: "g10", name: "待合" },
+            { id: "c10-2", groupId: "g10", name: "料理店" },
+            
+            { id: "c11-1", groupId: "g11", name: "映画スタジオ" },
+            { id: "c11-2", groupId: "g11", name: "テレビスタジオ" }
         ];
 
+        let selectedCardId = null;
+        let boxCounter = 1;
+
         function initApp() {
+            selectedCardId = null;
+            boxCounter = 1;
+            document.getElementById('banner').textContent = '① 動かしたいカードをタップして選んでね';
             const pool = document.getElementById('pool');
             const groupsContainer = document.getElementById('groups-container');
             pool.innerHTML = '';
             groupsContainer.innerHTML = '';
             document.getElementById('result-summary').textContent = '';
 
-            // グループ枠の生成
-            originalData.forEach(item => {
-                let gBox = document.createElement('div');
-                gBox.className = 'group-box';
-                gBox.innerHTML = `
-                    <div class="group-title">グループ ${item.group}</div>
-                    <div class="group-dropzone" data-group="${item.group}" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)"></div>
-                `;
-                groupsContainer.appendChild(gBox);
-            });
+            // 最初から箱をいくつか用意しておく（例として4つ）
+            for (let i = 0; i < 4; i++) {
+                addGroupBox();
+            }
 
             // カードをシャッフルしてプールに配置
-            let shuffledCards = [...originalData].sort(() => Math.random() - 0.5);
+            let shuffledCards = [...rawData].sort(() => Math.random() - 0.5);
             shuffledCards.forEach(item => {
                 let card = document.createElement('div');
                 card.className = 'card';
-                card.draggable = true;
                 card.id = item.id;
                 card.textContent = item.name;
-                card.dataset.group = item.group;
-                card.addEventListener('dragstart', dragStart);
+                card.dataset.groupid = item.groupId;
+                card.onclick = (e) => {
+                    e.stopPropagation();
+                    selectCard(item.id);
+                };
                 pool.appendChild(card);
             });
         }
 
-        function dragStart(e) {
-            e.dataTransfer.setData('text/plain', e.target.id);
+        function addGroupBox() {
+            const groupsContainer = document.getElementById('groups-container');
+            let boxId = 'box-' + boxCounter++;
+            let gBox = document.createElement('div');
+            gBox.className = 'group-box';
+            gBox.onclick = () => moveToBox(boxId);
+            gBox.innerHTML = `
+                <div class="group-title">箱 ${groupsContainer.children.length + 1}</div>
+                <div class="group-content" id="${boxId}"></div>
+            `;
+            groupsContainer.appendChild(gBox);
         }
 
-        function allowDrop(e) {
-            e.preventDefault();
-        }
-
-        function drop(e) {
-            e.preventDefault();
-            let id = e.dataTransfer.getData('text/plain');
+        function selectCard(id) {
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+            selectedCardId = id;
             let card = document.getElementById(id);
-            
-            // ドロップ先が dropzone か判定
-            let dropzone = e.target.closest('.group-dropzone');
-            if (dropzone) {
-                dropzone.appendChild(card);
-                card.classList.remove('correct', 'incorrect');
+            card.classList.add('selected');
+            document.getElementById('banner').textContent = '② 入れたい「箱」をタップしてね！';
+        }
+
+        function moveToBox(boxId) {
+            if (!selectedCardId) {
+                alert('先に動かしたいカードをタップして選んでね！');
+                return;
             }
+            let card = document.getElementById(selectedCardId);
+            let box = document.getElementById(boxId);
+            
+            box.appendChild(card);
+            card.classList.remove('selected', 'correct', 'incorrect');
+            selectedCardId = null;
+            document.getElementById('banner').textContent = '① 動かしたいカードをタップして選んでね';
         }
 
-        function dropToPool(e) {
-            e.preventDefault();
-            let id = e.dataTransfer.getData('text/plain');
-            let card = document.getElementById(id);
-            let pool = document.getElementById('pool');
-            pool.appendChild(card);
-            card.classList.remove('correct', 'incorrect');
-        }
+        document.getElementById('pool').onclick = function() {
+            if (!selectedCardId) return;
+            let card = document.getElementById(selectedCardId);
+            document.getElementById('pool').appendChild(card);
+            card.classList.remove('selected', 'correct', 'incorrect');
+            selectedCardId = null;
+            document.getElementById('banner').textContent = '① 動かしたいカードをタップして選んでね';
+        };
 
         function checkAnswers() {
-            let dropzones = document.querySelectorAll('.target-area .group-dropzone');
-            let correctCount = 0;
-            let totalCards = originalData.length;
+            let boxes = document.querySelectorAll('.group-content[id^="box-"]');
+            let totalCards = rawData.length;
+            let placedCards = 0;
+            let allCorrect = true;
 
-            dropzones.forEach(zone => {
-                let targetGroup = zone.dataset.group;
-                let cards = zone.querySelectorAll('.card');
+            // いいったんすべてのカードの判定スタイルをリセット
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('correct', 'incorrect'));
+
+            boxes.forEach(box => {
+                let cards = box.querySelectorAll('.card');
+                if (cards.length === 0) return;
+
+                placedCards += cards.length;
                 
+                // この箱に入っている最初のカードの本来のグループIDを基準にする
+                let firstGroupId = cards[0].dataset.groupid;
+                let isBoxValid = true;
+
                 cards.forEach(card => {
-                    if (card.dataset.group === targetGroup) {
+                    // 同じ箱のなかに、違うグループのカードが混ざっていたらダメ
+                    if (card.dataset.groupid !== firstGroupId) {
+                        isBoxValid = false;
+                    }
+                });
+
+                // 箱の中身をチェック
+                cards.forEach(card => {
+                    if (isBoxValid) {
                         card.classList.add('correct');
-                        card.classList.remove('incorrect');
-                        correctCount++;
                     } else {
                         card.classList.add('incorrect');
-                        card.classList.remove('correct');
+                        allCorrect = false;
                     }
                 });
             });
 
             let summary = document.getElementById('result-summary');
-            if (correctCount === totalCards) {
+            if (placedCards === 0) {
+                summary.style.color = '#d32f2f';
+                summary.textContent = 'カードが箱に入れられていません！';
+                return;
+            }
+
+            if (allCorrect && placedCards === totalCards) {
                 summary.style.color = 'green';
-                summary.textContent = `全問正解です！おめでとうございます！ (${correctCount}/${totalCards})`;
+                summary.textContent = '素晴らしい！すべての仲間が完璧にグループ分けできています！';
             } else {
                 summary.style.color = '#d32f2f';
-                summary.textContent = `正解数: ${correctCount} / ${totalCards} （赤色のカードは場所が違います）`;
+                summary.textContent = '赤色のカードは「違うグループの言葉」が同じ箱に入っています。見直してみよう！';
             }
         }
 
@@ -168,7 +241,6 @@
             initApp();
         }
 
-        // 初期化実行
         initApp();
     </script>
 </body>
